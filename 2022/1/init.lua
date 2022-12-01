@@ -1,6 +1,3 @@
-local io = require('io')
-local table = require('table')
-
 local totals = { 0 }
 
 for line in io.lines() do
