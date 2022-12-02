@@ -7,24 +7,25 @@ local points = {
   C = 3,
 }
 
-local winning = { 2, 3, 1 }
-local losing = { 3, 1, 2 }
+local function get_losing(oponent)
+  return ({ 3, 1, 2 })[oponent]
+end
+
+local function get_winning(oponent)
+  return ({ 2, 3, 1 })[oponent]
+end
+
+local function identity(v) return v end
 
 local choice = {
-  X = function(oponent)
-    return losing[oponent]
-  end,
-  Y = function(oponent)
-    return oponent
-  end,
-  Z = function(oponent)
-    return winning[oponent]
-  end
+  X = get_losing,
+  Y = identity,
+  Z = get_winning,
 }
 
 local function get_score(oponent, mine)
   if (oponent == mine) then return 3 + mine end
-  local winning_position = winning[oponent]
+  local winning_position = get_winning(oponent)
   if (winning_position == mine) then
     return 6 + mine
   else
