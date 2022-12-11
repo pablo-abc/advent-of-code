@@ -2,13 +2,13 @@ use std::collections::VecDeque;
 use std::io::stdin;
 
 struct Monkey {
-    pub items: VecDeque<i32>,
-    pub operation: Box<dyn Fn(i32) -> i32>,
-    pub test: Box<dyn Fn(i32) -> bool>,
+    pub items: VecDeque<i64>,
+    pub operation: Box<dyn Fn(i64) -> i64>,
+    pub test: Box<dyn Fn(i64) -> bool>,
     pub if_true: usize,
     pub if_false: usize,
-    pub inspection_count: i32,
-    pub divisor: i32,
+    pub inspection_count: i64,
+    pub divisor: i64,
 }
 
 impl Monkey {
@@ -26,6 +26,12 @@ impl Monkey {
 }
 
 fn main() {
+    let args = std::env::args().collect::<Vec<String>>();
+    let use_lcm = if let Some(arg) = args.get(1) {
+        arg == "--lcm"
+    } else {
+        false
+    };
     let mut buffer = String::new();
     let mut eof = false;
     let mut monkeys: Vec<Monkey> = Vec::new();
@@ -48,7 +54,7 @@ fn main() {
                             .collect::<Vec<_>>();
                         monkeys.last_mut().unwrap().items = starting_line[1]
                             .split(' ')
-                            .map(|i| i.parse::<i32>().unwrap())
+                            .map(|i| i.parse::<i64>().unwrap())
                             .collect::<VecDeque<_>>();
                     }
                     "Operation:" => {
@@ -58,11 +64,11 @@ fn main() {
                             .skip(3)
                             .map(String::from)
                             .collect::<Vec<_>>();
-                        monkeys.last_mut().unwrap().operation = Box::new(move |old: i32| {
+                        monkeys.last_mut().unwrap().operation = Box::new(move |old: i64| {
                             let value = if fn_desc[1] == "old" {
                                 old
                             } else {
-                                fn_desc[1].parse::<i32>().unwrap()
+                                fn_desc[1].parse::<i64>().unwrap()
                             };
                             match fn_desc[0].as_str() {
                                 "+" => old + value,
@@ -73,7 +79,7 @@ fn main() {
                     }
                     "Test:" => {
                         let test_line = line.split(" by ").map(|l| l.trim()).collect::<Vec<_>>();
-                        let value = test_line[1].parse::<i32>().unwrap();
+                        let value = test_line[1].parse::<i64>().unwrap();
                         monkeys.last_mut().unwrap().divisor = value;
                         monkeys.last_mut().unwrap().test = Box::new(move |old| (old % value) == 0);
                     }
@@ -97,17 +103,23 @@ fn main() {
             Err(e) => panic!("Error reading stdin: {}", e),
         }
     }
-    for _ in 0..20 {
+    let lcm = {
+        let divisors = &monkeys.iter().map(|m| m.divisor).collect::<Vec<_>>();
+        divisors.iter().fold(1, |acc, x| acc * x)
+    };
+    let limit = if use_lcm { 10000 } else { 20 };
+    for _ in 0..limit {
         for i in 0..monkeys.len() {
             {
                 let monkey = &mut monkeys[i];
                 let items_length = monkey.items.len();
-                monkey.inspection_count += items_length as i32;
+                monkey.inspection_count += items_length as i64;
             }
             while !&monkeys[i].items.is_empty() {
                 let if_true = monkeys[i].if_true;
                 let if_false = monkeys[i].if_false;
-                let worry_level = get_worry_level(&mut monkeys[i]);
+                let worry_level =
+                    get_worry_level(&mut monkeys[i], if use_lcm { Some(lcm) } else { None });
                 let test = &monkeys[i].test;
                 if test(worry_level) {
                     let true_monkey = &mut monkeys[if_true];
@@ -128,10 +140,14 @@ fn main() {
     println!("Part 1: {}", frequency[0] * frequency[1]);
 }
 
-fn get_worry_level(monkey: &mut Monkey) -> i32 {
+fn get_worry_level(monkey: &mut Monkey, lcm: Option<i64>) -> i64 {
     let operation = &monkey.operation;
     let items = &mut monkey.items;
     let item = items.pop_front().unwrap();
 
-    operation(item) / 3
+    if let Some(lcm) = lcm {
+        operation(item) % lcm
+    } else {
+        operation(item) / 3
+    }
 }
