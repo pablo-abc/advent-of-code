@@ -30,7 +30,7 @@ fn main() {
     let mut cycles: i32 = 0;
     let mut register_x = 1;
     let mut interesting_values = Vec::new();
-    let mut screen = vec![repeat(".").take(40).collect::<String>()];
+    let mut screen = vec![repeat(" ").take(40).collect::<String>()];
 
     while !eof {
         buffer.clear();
@@ -61,7 +61,7 @@ fn main() {
     }
 
     println!("Part 1: {}", interesting_values.into_iter().sum::<i32>());
-    println!("Part 2:\n{}", screen.join("\n"));
+    println!("Part 2:\n\n{}", screen.join("\n"));
 }
 
 fn update_interesting_values(interesting_values: &mut Vec<i32>, cycles: &mut i32, register_x: i32) {
@@ -75,7 +75,7 @@ fn draw(screen: &mut Vec<String>, cycles: i32, register_x: i32) {
     let end = register_x + 1;
     let current_crt = ((cycles as usize - 1) % 40) + 1;
     if cycles % 40 == 0 {
-        screen.push(repeat(".").take(40).collect::<String>());
+        screen.push(repeat(" ").take(40).collect::<String>());
     }
     let line = screen.last_mut().unwrap();
     if start <= (current_crt - 1) as i32 && end >= (current_crt - 1) as i32 {
