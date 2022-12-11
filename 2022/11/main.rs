@@ -137,7 +137,11 @@ fn main() {
         .collect::<Vec<_>>();
     frequency.sort();
     frequency.reverse();
-    println!("Part 1: {}", frequency[0] * frequency[1]);
+    println!(
+        "Part {}: {}",
+        if use_lcm { "2" } else { "1" },
+        frequency[0] * frequency[1]
+    );
 }
 
 fn get_worry_level(monkey: &mut Monkey, lcm: Option<i64>) -> i64 {
